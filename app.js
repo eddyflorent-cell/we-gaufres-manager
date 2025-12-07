@@ -278,42 +278,167 @@ function refreshRecIngredientsList() {
     const list = document.getElementById("rec-ingredients-list");
     if (!list) return;
 
-    if (recetteBuffer.ingredients.length === 0) {
+    if (!recetteBuffer.ingredients.length) {
         list.innerHTML = "<em>Aucun ingrédient ajouté pour le moment.</em>";
         return;
     }
 
-    list.innerHTML = recetteBuffer.ingredients.map((i, idx) => {
+    const rows = recetteBuffer.ingredients.map((i, idx) => {
         const stockIng = state.ingredients.find(ing => ing.nom === i.nom);
-        let condText = "";
-        let coutText = "";
 
-        if (stockIng) {
-            const coutUtilise = getIngredientCost(i);
-            condText = `Paquet : ${stockIng.qt} ${stockIng.unit} — ${stockIng.prix} FCFA`;
-            coutText = `Coût utilisé : ${coutUtilise.toFixed(0)} FCFA`;
-        } else {
-            condText = "Ingrédient non trouvé dans le stock";
-        }
+        const qteRecette = `${i.qte} ${i.unit}`;
+        const qtePaquet  = stockIng ? `${stockIng.qt} ${stockIng.unit}` : "-";
+        const prixPaquet = stockIng ? `${stockIng.prix} FCFA` : "-";
+        const coutUtilise = stockIng
+            ? `${getIngredientCost(i).toFixed(0)} FCFA`
+            : "-";
 
         return `
-        <div class="rec-ing-item">
-            <div>
-                <strong>${i.nom}</strong> — ${i.qte} ${i.unit}
-                <button class="btn btn-danger btn-mini" onclick="removeIngFromRec(${idx})">
-                    X
+            <tr>
+                <td>
+                    <input type="text" value="${i.nom}" readonly>
+                </td>
+                <td>
+                    <input type="text" value="${qteRecette}" readonly>
+                </td>
+                <td>
+                    <input type="text" value="${qtePaquet}" readonly>
+                </td>
+                <td>
+                    <input type="text" value="${prixPaquet}" readonly>
+                </td>
+                <td>
+                    <input type="text" value="${coutUtilise}" readonly>
+                </td>
+                <td class="recette-actions" style="text-align:center;">
+                    <button class="btn btn-danger btn-mini" onclick="removeIngFromRec(${idx})">
+                        ✕
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    list.innerHTML = `
+        <div class="table-wrapper">
+            <table class="stock-table recette-table">
+                <thead>
+                    <tr>
+                        <th>INGRÉDIENT</th>
+                        <th>QTÉ RECETTE</th>
+                        <th>QTÉ PAQUET</th>
+                        <th>PRIX PAQUET (FCFA)</th>
+                        <th>COÛT UTILISÉ (FCFA)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+            <div class="recette-footer-actions">
+                <button type="button" class="btn btn-secondary btn-mini" disabled>
+                    + Ajouter un ingrédient (formulaire ci-dessus)
+                </button>
+                <button type="button" class="btn btn-pink btn-mini" onclick="saveRecIngredients()">
+                    Sauvegarder ingrédients
                 </button>
             </div>
-            <div class="rec-ing-meta">
-                ${condText}${coutText ? " · " + coutText : ""}
-            </div>
-        </div>`;
-    }).join("");
+        </div>
+    `;
 }
 
 
+function refreshRecIngredientsList() {
+    const list = document.getElementById("rec-ingredients-list");
+    if (!list) return;
+
+    if (!recetteBuffer.ingredients.length) {
+        list.innerHTML = "<em>Aucun ingrédient ajouté pour le moment.</em>";
+        return;
+    }
+
+    const rows = recetteBuffer.ingredients.map((i, idx) => {
+        const stockIng = state.ingredients.find(ing => ing.nom === i.nom);
+
+        const qtePaquet  = stockIng ? `${stockIng.qt} ${stockIng.unit}` : "-";
+        const prixPaquet = stockIng ? `${stockIng.prix} FCFA` : "-";
+        const coutUtilise = stockIng
+            ? `${getIngredientCost(i).toFixed(0)} FCFA`
+            : "-";
+
+        return `
+            <tr>
+                <td>${i.nom}</td>
+                <td>
+                    <input 
+                        type="number" 
+                        min="0" 
+                        step="0.01" 
+                        value="${i.qte}" 
+                        onchange="updateRecIngQte(${idx}, this.value)"
+                    >
+                    <span class="recette-unit">${i.unit}</span>
+                </td>
+                <td>
+                    <input type="text" value="${qtePaquet}" readonly>
+                </td>
+                <td>
+                    <input type="text" value="${prixPaquet}" readonly>
+                </td>
+                <td>
+                    <input type="text" value="${coutUtilise}" readonly>
+                </td>
+                <td class="recette-actions" style="text-align:center;">
+                    <button class="btn btn-danger btn-mini" onclick="removeIngFromRec(${idx})">
+                        ✕
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+
+    list.innerHTML = `
+        <div class="table-wrapper">
+            <table class="stock-table recette-table">
+                <thead>
+                    <tr>
+                        <th>INGRÉDIENT</th>
+                        <th>QTÉ RECETTE</th>
+                        <th>QTÉ PAQUET</th>
+                        <th>PRIX PAQUET (FCFA)</th>
+                        <th>COÛT UTILISÉ (FCFA)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+            <div class="recette-footer-actions">
+                <button type="button" class="btn btn-secondary btn-mini" disabled>
+                    + Ajouter un ingrédient (formulaire ci-dessus)
+                </button>
+                <button type="button" class="btn btn-pink btn-mini" onclick="saveRecIngredients()">
+                    Sauvegarder ingrédients
+                </button>
+            </div>
+        </div>
+    `;
+}
+
 function removeIngFromRec(index) {
     recetteBuffer.ingredients.splice(index, 1);
+    refreshRecIngredientsList();
+}
+function updateRecIngQte(index, newValue) {
+    const v = parseFloat(newValue);
+    if (!isNaN(v) && v >= 0) {
+        recetteBuffer.ingredients[index].qte = v;
+    } else {
+        recetteBuffer.ingredients[index].qte = 0;
+    }
+    // On relance l'affichage pour recalculer le coût utilisé
     refreshRecIngredientsList();
 }
 
@@ -1101,6 +1226,10 @@ function updateRecetteBaseCost() {
 // Charger les ingrédients depuis le localStorage
 state.ingredients = JSON.parse(localStorage.getItem("ingredients") || "[]");
 
+// Indice de l'ingrédient en cours de modification (null = mode ajout)
+let ingredientEditIndex = null;
+
+
 // Sauvegarde des ingrédients
 function saveIngredients() {
     localStorage.setItem("ingredients", JSON.stringify(state.ingredients));
@@ -1119,7 +1248,7 @@ function checkStockAlerts() {
     alert(message);
 }
 
-/* ---------- Ajouter / ravitailler un ingrédient ---------- */
+/* ---------- Ajouter / modifier / ravitailler un ingrédient ---------- */
 function addIngredient() {
     const nom  = document.getElementById("ing-nom").value.trim();
     const prix = parseFloat(document.getElementById("ing-prix").value);
@@ -1128,44 +1257,72 @@ function addIngredient() {
     const seuilInput = document.getElementById("ing-seuil");
     const seuil = seuilInput ? (parseFloat(seuilInput.value) || 0) : 0;
 
-    if (!nom || isNaN(prix) || prix <= 0 || isNaN(qt) || qt <= 0) {
-        alert("Merci de renseigner correctement le nom, le prix d'achat et la quantité du paquet.");
-        return;
+   if (!nom || isNaN(prix) || prix <= 0 || isNaN(qt) || qt <= 0) {
+    alert("Merci de renseigner correctement le nom, le prix d'achat et la quantité.");
+    return;
+}
+
+
+    // =====================
+    // MODE ÉDITION
+    // =====================
+    if (ingredientEditIndex !== null && state.ingredients[ingredientEditIndex]) {
+        const ing = state.ingredients[ingredientEditIndex];
+
+        // On garde ce qui a déjà été utilisé pour ne pas casser l'historique
+        const utiliseAvant = (ing.qt || 0) - (ing.stock || 0);
+
+        ing.nom   = nom;
+        ing.prix  = prix;
+        ing.qt    = qt;
+        ing.unit  = unit;
+        ing.seuil = seuil;
+
+        // Nouveau stock = nouvelle quantité - déjà utilisé (minimum 0)
+        let nouveauStock = qt - utiliseAvant;
+        if (nouveauStock < 0) nouveauStock = 0;
+        ing.stock = nouveauStock;
+
+        // On repasse en mode ajout
+        ingredientEditIndex = null;
+        const btn = document.getElementById("btn-add-ingredient");
+        if (btn) btn.textContent = "Ajouter l'ingrédient";
     }
 
-    // On cherche un ingrédient de même nom + même unité (on ignore la casse du nom)
-    const existing = state.ingredients.find(
-        ing => ing.nom.toLowerCase() === nom.toLowerCase() && ing.unit === unit
-    );
+    // =====================
+    // MODE AJOUT / RAVITAILLEMENT
+    // =====================
+    else {
+        const existing = state.ingredients.find(
+            ing => ing.nom.toLowerCase() === nom.toLowerCase() && ing.unit === unit
+        );
 
-    if (existing) {
-        // On considère que "prix" = coût total cumulé pour toute la quantité
-        const ancienQt = existing.qt || 0;
-        const ancienPrixTotal = existing.prix || 0;
+        if (existing) {
+            const ancienQt = existing.qt || 0;
+            const ancienPrixTotal = existing.prix || 0;
 
-        const nouveauQtTotal = ancienQt + qt;
-        const nouveauPrixTotal = ancienPrixTotal + prix;
+            const nouveauQtTotal = ancienQt + qt;
+            const nouveauPrixTotal = ancienPrixTotal + prix;
 
-        existing.qt = nouveauQtTotal;
-        // on ajoute le nouveau paquet au stock
-        existing.stock = (existing.stock || 0) + qt;
-        existing.prix = nouveauPrixTotal;
+            existing.qt = nouveauQtTotal;
+            existing.stock = (existing.stock || 0) + qt; // on rajoute le paquet
+            existing.prix = nouveauPrixTotal;
 
-        // on met à jour le seuil si un nouveau seuil est saisi
-        if (seuil > 0) {
-            existing.seuil = seuil;
+            if (seuil > 0) {
+                existing.seuil = seuil;
+            }
+        } else {
+            const newIng = {
+                nom,
+                prix,        // prix total pour ce paquet
+                qt,          // quantité achetée totale
+                unit,        // unité
+                stock: qt,   // stock initial
+                parGaufre: 0,
+                seuil
+            };
+            state.ingredients.push(newIng);
         }
-    } else {
-        const newIng = {
-            nom,
-            prix,        // prix total (pour ce paquet, ou cumulé + tard)
-            qt,          // quantité achetée totale
-            unit,        // unité
-            stock: qt,   // stock initial
-            parGaufre: 0,
-            seuil        // nouveau champ pour l’alerte
-        };
-        state.ingredients.push(newIng);
     }
 
     saveIngredients();
@@ -1178,8 +1335,24 @@ function addIngredient() {
     document.getElementById("ing-qt").value   = "";
     if (seuilInput) seuilInput.value = "";
 }
+/* ---------- Passer un ingrédient en mode édition ---------- */
+function editIngredient(index) {
+    const ing = state.ingredients[index];
+    if (!ing) return;
 
+    document.getElementById("ing-nom").value  = ing.nom || "";
+    document.getElementById("ing-prix").value = ing.prix || "";
+    document.getElementById("ing-qt").value   = ing.qt || "";
+    document.getElementById("ing-unit").value = ing.unit || "g";
 
+    const seuilInput = document.getElementById("ing-seuil");
+    if (seuilInput) seuilInput.value = ing.seuil || "";
+
+    ingredientEditIndex = index;
+
+    const btn = document.getElementById("btn-add-ingredient");
+    if (btn) btn.textContent = "Mettre à jour l'ingrédient";
+}
 
 
 /* ---------- Supprimer un ingrédient ---------- */
@@ -1221,12 +1394,16 @@ function renderIngredients() {
                 <td>${utilise.toFixed(2)} ${ing.unit}</td>
                 <td>${(ing.stock || 0).toFixed(2)} ${ing.unit} ${alertStock}</td>
                 <td>${Math.round(prixUnitaire)} FCFA</td>
-                <td>${Math.round(valeurStock)} FCFA</td>
-                <td>
-                    <button class="btn btn-danger btn-mini" onclick="deleteIngredient(${i})">
-                        Supprimer
-                    </button>
-                </td>
+                <td>${Math.round(valeurStock)} FCFA</td> 
+         <td>
+    <button class="btn btn-secondary btn-mini" onclick="editIngredient(${i})">
+        Modifier
+    </button>
+    <button class="btn btn-danger btn-mini" onclick="deleteIngredient(${i})">
+        Supprimer
+    </button>
+</td>
+
             </tr>
         `;
     }).join("");

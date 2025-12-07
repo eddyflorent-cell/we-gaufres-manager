@@ -312,6 +312,49 @@ td {
 .stock-table tfoot th {
     background: #e8f3ff;
 }
+
+
+/* Tableau des ingrédients de recette */
+.recette-table th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.recette-table td {
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.recette-table input {
+    width: 100%;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    font-size: 13px;
+}
+
+.recette-table input[readonly] {
+    background: #f9fafb;
+    color: #374151;
+}
+
+.recette-unit {
+    margin-left: 4px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.recette-footer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+}
+.recette-table td:last-child {
+    width: 60px;
+}
 /* =================== RESPONSIVE MOBILE (<= 768px) =================== */
 /* ==== Packs dynamiques sur la page Ventes ==== */
 
@@ -453,3 +496,4 @@ td {
     font-size: 14px;
     margin-top: 3px;
 }
+
